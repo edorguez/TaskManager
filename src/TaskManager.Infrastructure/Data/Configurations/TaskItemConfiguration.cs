@@ -15,6 +15,10 @@ public class TaskItemConfiguration : IEntityTypeConfiguration<TaskItem>
         {
             t.Property(p => p.Value).HasColumnName("Title").HasMaxLength(200).IsRequired();
         });
+        builder.OwnsOne(x => x.DueDate, d =>
+        {
+            d.Property(p => p.Value).HasColumnName("DueDate").IsRequired();
+        });
         builder.Property(x => x.Description).HasMaxLength(2000);
         builder.Property(x => x.StatusId).IsRequired();
         builder.Property(x => x.CreatedByUserId).IsRequired().HasMaxLength(450);

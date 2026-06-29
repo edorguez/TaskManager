@@ -4,7 +4,9 @@ namespace TaskManager.Domain.ValueObjects;
 
 public sealed class TaskTitle
 {
-    public string Value { get; }
+    public string Value { get; private set; }
+
+    private TaskTitle() { }
 
     private TaskTitle(string value)
     {

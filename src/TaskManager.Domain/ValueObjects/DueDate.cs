@@ -5,7 +5,9 @@ namespace TaskManager.Domain.ValueObjects;
 
 public sealed class DueDate
 {
-    public DateTime Value { get; }
+    public DateTime Value { get; private set; }
+
+    private DueDate() { }
 
     private DueDate(DateTime value)
     {

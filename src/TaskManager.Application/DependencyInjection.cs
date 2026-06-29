@@ -1,6 +1,7 @@
 using System.Reflection;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
+using TaskManager.Application.Abstractions.Behaviors;
 using TaskManager.Application.Abstractions.Mediator;
 using TaskManager.Application.Mapping;
 
@@ -12,10 +13,11 @@ public static class DependencyInjection
     {
         var assembly = Assembly.GetExecutingAssembly();
 
-        services.AddSingleton<IMediator, Mediator>();
+        services.AddScoped<IMediator, Mediator>();
 
         var handlerTypes = assembly.GetTypes()
             .Where(t => t is { IsClass: true, IsAbstract: false })
+            .Where(t => !t.IsGenericType)
             .SelectMany(t => t.GetInterfaces()
                 .Where(i => i.IsGenericType && (
                     i.GetGenericTypeDefinition() == typeof(ICommandHandler<>) ||
