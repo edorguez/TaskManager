@@ -67,4 +67,17 @@ public class TaskItem : AggregateRoot
         RaiseDomainEvent(new TaskCompletedDomainEvent(Id, CreatedByUserId));
         return Result.Ok();
     }
+
+    public Result ChangeStatus(int newStatusId)
+    {
+        if (newStatusId < 1 || newStatusId > 3)
+            return Result.Fail("Invalid status.");
+
+        if (StatusId == newStatusId)
+            return Result.Ok();
+
+        StatusId = newStatusId;
+        UpdatedAt = DateTime.UtcNow;
+        return Result.Ok();
+    }
 }

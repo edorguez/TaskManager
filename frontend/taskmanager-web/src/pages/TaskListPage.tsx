@@ -1,23 +1,12 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Box, Alert, Snackbar } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { StatusChip } from '../components/ui/NeoChip';
 import { NeoModal, NeoConfirmButton } from '../components/ui/NeoModal';
+import { Board } from '../components/board/Board';
 import { useTaskStore } from '../store/taskStore';
 
-const filterOptions = ['All', 'Todo', 'InProgress', 'Done'];
-
-function getTaskBgColor(status: string): string {
-  if (status === 'InProgress') return '#f3ff00';
-  return '#ffffff';
-}
-
 export default function TaskListPage() {
-  const navigate = useNavigate();
-  const { tasks, loading, fetchTasks, deleteTask } = useTaskStore();
-  const [filter, setFilter] = useState('All');
+  const { tasks, statuses, loading, fetchTasks, fetchStatuses, deleteTask, updateTask } = useTaskStore();
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
     open: false,
@@ -27,9 +16,8 @@ export default function TaskListPage() {
 
   useEffect(() => {
     fetchTasks();
-  }, [fetchTasks]);
-
-  const filteredTasks = filter === 'All' ? tasks : tasks.filter((t) => t.status === filter);
+    fetchStatuses();
+  }, [fetchTasks, fetchStatuses]);
 
   const handleDelete = async (id: string) => {
     try {
@@ -42,13 +30,24 @@ export default function TaskListPage() {
     }
   };
 
+  const handleStatusChange = async (taskId: string, statusId: number) => {
+    const task = tasks.find((t) => t.id === taskId);
+    if (!task) return;
+    try {
+      await updateTask(taskId, {
+        title: task.title,
+        description: task.description,
+        dueDate: task.dueDate,
+        statusId,
+      });
+    } catch (err) {
+      console.error('Failed to update task status:', err);
+    }
+  };
+
   return (
     <Box>
-      <Box
-        sx={{
-          mb: 4,
-        }}
-      >
+      <Box sx={{ mb: 4 }}>
         <Box
           component="h1"
           sx={{
@@ -65,161 +64,17 @@ export default function TaskListPage() {
         </Box>
       </Box>
 
-      <Box
-        sx={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: 2,
-          mb: 4,
-          borderBottom: '4px solid #1b1c17',
-          pb: 4,
-        }}
-      >
-        {filterOptions.map((f) => (
-          <Box
-            key={f}
-            component="button"
-            onClick={() => setFilter(f)}
-            sx={{
-              px: 4,
-              py: 1.5,
-              fontFamily: '"Space Mono", monospace',
-              fontWeight: 700,
-              fontSize: '14px',
-              textTransform: 'uppercase',
-              border: '4px solid #1b1c17',
-              cursor: 'pointer',
-              boxShadow: '4px 4px 0px 0px rgba(0,0,0,1)',
-              transition: 'all 0.15s ease',
-              backgroundColor: filter === f ? '#00fe66' : '#ffffff',
-              color: filter === f ? '#007128' : '#474832',
-              '&:hover': {
-                transform: 'translate(2px, 2px)',
-                boxShadow: '2px 2px 0px 0px rgba(0,0,0,1)',
-              },
-            }}
-          >
-            {f === 'InProgress' ? 'In Progress' : f === 'All' ? 'All' : f}
-          </Box>
-        ))}
-      </Box>
-
       {loading ? (
         <Box sx={{ fontFamily: '"Space Grotesk", sans-serif', color: '#474832', py: 4, textAlign: 'center' }}>
           Loading tasks…
         </Box>
       ) : (
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)', lg: 'repeat(3, 1fr)' },
-            gap: 4,
-          }}
-        >
-          {filteredTasks.map((task) => (
-            <Box
-              key={task.id}
-              onClick={() => navigate(`/tasks/${task.id}/edit`)}
-              sx={{
-                backgroundColor: getTaskBgColor(task.status),
-                border: '4px solid #1b1c17',
-                boxShadow: '8px 8px 0px 0px rgba(0,0,0,1)',
-                transition: 'all 0.2s ease',
-                display: 'flex',
-                flexDirection: 'column',
-                cursor: 'pointer',
-                '&:hover': {
-                  transform: 'translate(4px, 4px)',
-                  boxShadow: '4px 4px 0px 0px rgba(0,0,0,1)',
-                },
-              }}
-            >
-              <Box sx={{ p: 3, flex: 1 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                  <StatusChip status={task.status} />
-                  <Box
-                    component="button"
-                    onClick={(e) => { e.stopPropagation(); setDeleteConfirmId(task.id); }}
-                    sx={{
-                      display: 'flex',
-                      p: 0.5,
-                      border: '2px solid #1b1c17',
-                      backgroundColor: '#ba1a1a',
-                      color: '#ffffff',
-                      cursor: 'pointer',
-                      transition: 'all 0.15s ease',
-                      '&:hover': { backgroundColor: '#8a0f0f' },
-                    }}
-                  >
-                    <DeleteIcon sx={{ fontSize: 16 }} />
-                  </Box>
-                </Box>
-
-                <Box
-                  component="h3"
-                  sx={{
-                    fontFamily: '"Montserrat", sans-serif',
-                    fontWeight: 800,
-                    fontSize: '24px',
-                    textTransform: 'uppercase',
-                    mb: 1,
-                    lineHeight: 1.2,
-                    color: '#1b1c17',
-                  }}
-                >
-                  {task.title}
-                </Box>
-
-                <Box
-                  sx={{
-                    fontFamily: '"Space Grotesk", sans-serif',
-                    fontWeight: 400,
-                    fontSize: '16px',
-                    color: '#474832',
-                    mb: 3,
-                    opacity: 0.7,
-                  }}
-                >
-                  {task.description || 'No description'}
-                </Box>
-
-              </Box>
-            </Box>
-          ))}
-
-          <Box
-            component="button"
-            onClick={() => navigate('/tasks/new')}
-            sx={{
-              border: '4px dashed #1b1c17',
-              backgroundColor: '#f0eee6',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              p: 6,
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-              '&:hover': {
-                backgroundColor: '#ffffff',
-                borderStyle: 'solid',
-              },
-            }}
-          >
-            <AddIcon sx={{ fontSize: 64, mb: 2, color: '#1b1c17', transition: 'transform 0.2s ease', '&:hover': { transform: 'scale(1.25)' } }} />
-            <Box
-              sx={{
-                fontFamily: '"Montserrat", sans-serif',
-                fontWeight: 800,
-                fontSize: '24px',
-                textTransform: 'uppercase',
-                color: '#1b1c17',
-              }}
-            >
-              Add New Task
-            </Box>
-          </Box>
-        </Box>
+        <Board
+          tasks={tasks}
+          statuses={statuses}
+          onDelete={(id) => setDeleteConfirmId(id)}
+          onStatusChange={handleStatusChange}
+        />
       )}
 
       <NeoModal

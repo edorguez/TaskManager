@@ -59,15 +59,6 @@ public static class TaskEndpoints
             return Results.Ok(ApiResponse.Ok<object>(null!));
         });
 
-        group.MapPatch("/{id:guid}/complete", async (Guid id, IMediator mediator, HttpContext httpContext) =>
-        {
-            var userId = GetUserId(httpContext);
-            var result = await mediator.Send(new CompleteTaskCommand(id, userId));
-            if (result.IsFailed)
-                return Results.BadRequest(ApiResponse.Fail(result.Errors.Select(e => e.Message)));
-            return Results.Ok(ApiResponse.Ok<object>(null!));
-        });
-
         group.MapGet("/statuses", async (IMediator mediator) =>
         {
             var result = await mediator.Send(new GetTaskStatusesQuery());

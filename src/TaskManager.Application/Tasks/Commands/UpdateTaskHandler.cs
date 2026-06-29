@@ -27,10 +27,9 @@ public class UpdateTaskHandler(ITaskRepository repository, IUnitOfWork unitOfWor
         if (updateResult.IsFailed)
             return Result.Fail<TaskResponse>(updateResult.Errors.Select(e => e.Message));
 
-        if (command.StatusId == 2)
-            task.Start();
-        else if (command.StatusId == 3)
-            task.Complete();
+        var statusResult = task.ChangeStatus(command.StatusId);
+        if (statusResult.IsFailed)
+            return Result.Fail<TaskResponse>(statusResult.Errors.Select(e => e.Message));
 
         repository.Update(task);
         await unitOfWork.SaveChangesAsync(ct);

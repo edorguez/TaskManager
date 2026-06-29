@@ -12,11 +12,10 @@ interface TaskState {
   createTask: (data: CreateTaskDto) => Promise<Task>;
   updateTask: (id: string, data: UpdateTaskDto) => Promise<Task>;
   deleteTask: (id: string) => Promise<void>;
-  completeTask: (id: string) => Promise<void>;
   getTaskById: (id: string) => Promise<Task | null>;
 }
 
-export const useTaskStore = create<TaskState>((set, get) => ({
+export const useTaskStore = create<TaskState>((set) => ({
   tasks: [],
   statuses: [],
   loading: false,
@@ -76,18 +75,6 @@ export const useTaskStore = create<TaskState>((set, get) => ({
     }
   },
 
-  completeTask: async (id: string) => {
-    const response = await tasksApi.complete(id);
-    if (response.data.success) {
-      const task = get().tasks.find((t) => t.id === id);
-      if (task) {
-        await get().fetchTasks();
-      }
-    } else {
-      throw new Error(response.data.errors?.[0] || 'Failed to complete task');
-    }
-  },
-
   getTaskById: async (id: string) => {
     const response = await tasksApi.getById(id);
     if (response.data.success && response.data.data) {
@@ -95,4 +82,6 @@ export const useTaskStore = create<TaskState>((set, get) => ({
     }
     return null;
   },
+
+
 }));

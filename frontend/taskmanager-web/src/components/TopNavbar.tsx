@@ -22,8 +22,6 @@ export default function TopNavbar() {
         width: '100%',
         px: '24px',
         height: 80,
-        position: 'sticky',
-        top: 0,
         zIndex: 40,
         backgroundColor: '#fbf9f1',
         borderBottom: '4px solid #1b1c17',

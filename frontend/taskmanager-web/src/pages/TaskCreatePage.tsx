@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Box, Alert } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import EventIcon from '@mui/icons-material/Event';
@@ -10,11 +10,15 @@ import { useTaskStore } from '../store/taskStore';
 
 export default function TaskCreatePage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { createTask, statuses, fetchStatuses } = useTaskStore();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [dueDate, setDueDate] = useState('');
-  const [statusId, setStatusId] = useState(1);
+  const [statusId, setStatusId] = useState(() => {
+    const param = searchParams.get('statusId');
+    return param ? Number(param) : 1;
+  });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);

@@ -17,8 +17,6 @@ export const tasksApi = {
   delete: (id: string) =>
     apiClient.delete<ApiResponse<null>>(`/api/tasks/${id}`),
   
-  complete: (id: string) =>
-    apiClient.patch<ApiResponse<null>>(`/api/tasks/${id}/complete`),
   
   getStatuses: () =>
     apiClient.get<ApiResponse<TaskStatus[]>>('/api/tasks/statuses'),
