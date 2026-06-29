@@ -1,0 +1,51 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: taskmanager-db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-taskmanager}
+      POSTGRES_USER: ${POSTGRES_USER:-taskmanager}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-taskmanager_secret}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-taskmanager}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: src/TaskManager.API/Dockerfile
+    container_name: taskmanager-api
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://0.0.0.0:8080
+      ConnectionStrings__DefaultConnection: Host=postgres;Database=${POSTGRES_DB:-taskmanager};Username=${POSTGRES_USER:-taskmanager};Password=${POSTGRES_PASSWORD:-taskmanager_secret}
+      Jwt__Secret: ${JWT_SECRET:-your_super_secret_jwt_key_min_32_chars_long_here}
+      Jwt__Issuer: ${JWT_ISSUER:-TaskManagerAPI}
+      Jwt__Audience: ${JWT_AUDIENCE:-TaskManagerWeb}
+      FrontendUrl: http://localhost:3000
+    ports:
+      - "5000:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: frontend/taskmanager-web
+      dockerfile: Dockerfile
+    container_name: taskmanager-web
+    environment:
+      VITE_API_URL: http://localhost:5000
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+
+volumes:
+  postgres_data:
