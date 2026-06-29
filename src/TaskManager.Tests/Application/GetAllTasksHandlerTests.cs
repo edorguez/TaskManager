@@ -17,7 +17,7 @@ public class GetAllTasksHandlerTests
 
         var title = TaskTitle.Create("Task 1").Value;
         var dueDate = DueDate.Create(new DateTime(2026, 6, 1, 0, 0, 0, DateTimeKind.Utc), dateTimeProvider).Value;
-        var task = TaskItem.Create(title, "", dueDate, "user-1").Value;
+        var task = TaskItem.Create(title, "", dueDate, 1, "user-1").Value;
 
         var tasks = new List<TaskItem> { task };
         repository.GetAllByUserAsync("user-1").Returns(tasks.AsEnumerable());

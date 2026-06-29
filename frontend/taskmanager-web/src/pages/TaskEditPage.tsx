@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Box } from '@mui/material';
+import { Box, Alert } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import EventIcon from '@mui/icons-material/Event';
 import BoltIcon from '@mui/icons-material/Bolt';
@@ -18,6 +18,7 @@ export default function TaskEditPage() {
   const [description, setDescription] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [statusId, setStatusId] = useState(1);
+  const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -40,18 +41,36 @@ export default function TaskEditPage() {
     }
   }, [id, getTaskById, statuses]);
 
+  const today = new Date().toISOString().split('T')[0];
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!id) return;
+    setError('');
+    if (!title.trim()) {
+      setError('Title is required');
+      return;
+    }
+    if (title.trim().length > 200) {
+      setError('Title must be at most 200 characters');
+      return;
+    }
+    if (!dueDate) {
+      setError('Due date is required');
+      return;
+    }
     setSubmitting(true);
     try {
       await updateTask(id, {
-        title,
+        title: title.trim(),
         description,
         dueDate: new Date(dueDate).toISOString(),
         statusId,
       });
       navigate('/tasks');
+    } catch (err) {
+      const data = (err as any)?.response?.data;
+      setError(data?.errors?.[0] || 'Failed to update task');
     } finally {
       setSubmitting(false);
     }
@@ -106,17 +125,7 @@ export default function TaskEditPage() {
                 color: '#1b1c17',
               }}
             >
-              Update Mission
-            </Box>
-            <Box
-              sx={{
-                fontFamily: '"Space Mono", monospace',
-                fontWeight: 700,
-                fontSize: '14px',
-                color: '#5e6300',
-              }}
-            >
-              TASK_ID: {id?.slice(0, 4).toUpperCase()}-ALPHA
+              Update Task
             </Box>
           </Box>
         </Box>
@@ -133,14 +142,18 @@ export default function TaskEditPage() {
         >
           <Box sx={{ position: 'absolute', top: 0, left: 0, width: '100%', height: 8, backgroundColor: '#1b1c17' }} />
 
-          <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          <Box component="form" onSubmit={handleSubmit} noValidate sx={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            {error && (
+              <Alert severity="error" sx={{ mb: 2, border: '4px solid #1b1c17', borderRadius: 0, boxShadow: '4px 4px 0px 0px rgba(0,0,0,1)' }}>
+                {error}
+              </Alert>
+            )}
             <Box>
               <NeoInput
-                label="Task Title"
+                label="Task Title *"
                 placeholder="ENTER A BOLD TITLE..."
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                required
                 slotProps={{ inputLabel: { shrink: true } }}
               />
             </Box>
@@ -167,7 +180,7 @@ export default function TaskEditPage() {
                   }}
                 >
                   <Box sx={{ width: 16, height: 16, backgroundColor: '#0054d6', border: '2px solid #1b1c17', display: 'inline-block' }} />
-                  Deadline
+                  Due Date *
                 </Box>
                 <Box sx={{ position: 'relative' }}>
                   <EventIcon
@@ -177,6 +190,7 @@ export default function TaskEditPage() {
                     type="date"
                     value={dueDate}
                     onChange={(e) => setDueDate(e.target.value)}
+                    min={today}
                     style={{
                       width: '100%',
                       padding: '16px 16px 16px 56px',
@@ -218,7 +232,7 @@ export default function TaskEditPage() {
                   }}
                 >
                   <Box sx={{ width: 16, height: 16, backgroundColor: '#5e6300', border: '2px solid #1b1c17', display: 'inline-block' }} />
-                  Status
+                  Status *
                 </Box>
                 <Box
                   component="select"
@@ -302,7 +316,7 @@ export default function TaskEditPage() {
                 },
               }}
             >
-              {submitting ? 'UPDATING...' : 'UPDATE TASK'}
+              {submitting ? 'UPDATING…' : 'UPDATE TASK'}
               <BoltIcon
                 sx={{
                   fontSize: 40,

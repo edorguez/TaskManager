@@ -13,7 +13,7 @@ public class JwtTokenService(IOptions<JwtSettings> jwtSettings)
 
     public (string token, DateTime expiresAt) GenerateToken(ApplicationUser user)
     {
-        var expiresAt = DateTime.UtcNow.AddHours(8);
+        var expiresAt = DateTime.UtcNow.AddHours(24);
         var claims = new[]
         {
             new Claim(ClaimTypes.NameIdentifier, user.Id),

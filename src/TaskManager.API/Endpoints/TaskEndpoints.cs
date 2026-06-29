@@ -35,7 +35,7 @@ public static class TaskEndpoints
         group.MapPost("/", async ([FromBody] CreateTaskRequest request, IMediator mediator, HttpContext httpContext) =>
         {
             var userId = GetUserId(httpContext);
-            var result = await mediator.Send(new CreateTaskCommand(request.Title, request.Description, request.DueDate, userId));
+            var result = await mediator.Send(new CreateTaskCommand(request.Title, request.Description, request.DueDate, request.StatusId, userId));
             if (result.IsFailed)
                 return Results.BadRequest(ApiResponse.Fail(result.Errors.Select(e => e.Message)));
             return Results.Created($"/api/tasks/{result.Value.Id}", ApiResponse.Ok(result.Value));

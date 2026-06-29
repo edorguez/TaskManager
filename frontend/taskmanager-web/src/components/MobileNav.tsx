@@ -1,7 +1,6 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Box } from '@mui/material';
 import DashboardIcon from '@mui/icons-material/Dashboard';
-import AddIcon from '@mui/icons-material/Add';
 import ChecklistIcon from '@mui/icons-material/Checklist';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { useAuthStore } from '../store/authStore';
@@ -30,13 +29,6 @@ export default function MobileNav() {
       active: location.pathname.startsWith('/tasks'),
     },
     {
-      label: 'New',
-      icon: <AddIcon />,
-      path: '/tasks/new',
-      active: false,
-      isFab: true,
-    },
-    {
       label: 'Logout',
       icon: <LogoutIcon />,
       path: null,
@@ -62,34 +54,6 @@ export default function MobileNav() {
       }}
     >
       {items.map((item) => {
-        if (item.isFab) {
-          return (
-            <Box
-              key={item.label}
-              component="button"
-              onClick={() => navigate(item.path!)}
-              sx={{
-                position: 'relative',
-                top: -16,
-                width: 60,
-                height: 60,
-                borderRadius: '50%',
-                backgroundColor: '#f3ff00',
-                border: '4px solid #1b1c17',
-                boxShadow: '4px 4px 0px 0px rgba(0,0,0,1)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                transition: 'all 0.15s ease',
-                '&:active': { transform: 'scale(0.95)' },
-              }}
-            >
-              <AddIcon sx={{ fontSize: 32, fontWeight: 700, color: '#1b1c17' }} />
-            </Box>
-          );
-        }
-
         if (item.isLogout) {
           return (
             <Box

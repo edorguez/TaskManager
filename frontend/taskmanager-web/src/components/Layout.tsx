@@ -16,6 +16,7 @@ export default function Layout() {
             flex: 1,
             overflowY: 'auto',
             p: { xs: '16px', md: '24px' },
+            pb: { xs: '96px', md: '24px' },
             backgroundColor: '#f0eee6',
           }}
         >

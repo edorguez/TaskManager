@@ -20,7 +20,7 @@ public class CreateTaskHandler(ITaskRepository repository, IUnitOfWork unitOfWor
         if (dueDateResult.IsFailed)
             return Result.Fail<TaskResponse>(dueDateResult.Errors.Select(e => e.Message));
 
-        var taskResult = TaskItem.Create(titleResult.Value, command.Description, dueDateResult.Value, command.UserId);
+        var taskResult = TaskItem.Create(titleResult.Value, command.Description, dueDateResult.Value, command.StatusId, command.UserId);
         if (taskResult.IsFailed)
             return Result.Fail<TaskResponse>(taskResult.Errors.Select(e => e.Message));
 

@@ -3,7 +3,6 @@ import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { Box, Link, Alert } from '@mui/material';
 import EmailIcon from '@mui/icons-material/Email';
 import LockIcon from '@mui/icons-material/Lock';
-import PersonIcon from '@mui/icons-material/Person';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { authApi } from '../api/auth';
 import { useAuthStore } from '../store/authStore';
@@ -11,7 +10,6 @@ import { useAuthStore } from '../store/authStore';
 export default function RegisterPage() {
   const navigate = useNavigate();
   const login = useAuthStore((state) => state.login);
-  const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -21,6 +19,23 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    if (!email || !password || !confirmPassword) {
+      setError('All fields are required');
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError('Email is not valid');
+      return;
+    }
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters');
+      return;
+    }
+    if (!/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/\d/.test(password) || !/[^A-Za-z0-9]/.test(password)) {
+      setError('Password must contain at least one uppercase letter, one lowercase letter, one digit, and one special character');
+      return;
+    }
     if (password !== confirmPassword) {
       setError('Passwords do not match');
       return;
@@ -34,8 +49,9 @@ export default function RegisterPage() {
       } else {
         setError(response.data.errors?.[0] || 'Registration failed');
       }
-    } catch {
-      setError('Registration failed. Please try again.');
+    } catch (err) {
+      const data = (err as any)?.response?.data;
+      setError(data?.errors?.[0] || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -186,38 +202,7 @@ export default function RegisterPage() {
             </Alert>
           )}
 
-          <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-              <Box
-                component="label"
-                htmlFor="fullname"
-                sx={{
-                  fontFamily: '"Space Mono", monospace',
-                  fontWeight: 700,
-                  fontSize: '14px',
-                  textTransform: 'uppercase',
-                  color: '#1b1c17',
-                }}
-              >
-                Full Name
-              </Box>
-              <Box sx={{ position: 'relative' }}>
-                <PersonIcon
-                  sx={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: '#1b1c17' }}
-                />
-                <input
-                  id="fullname"
-                  type="text"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  placeholder="COMMANDER SHEPARD"
-                  style={inputStyles}
-                  onFocus={handleFocus}
-                  onBlur={handleBlur}
-                />
-              </Box>
-            </Box>
-
+          <Box component="form" onSubmit={handleSubmit} noValidate sx={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
               <Box
                 component="label"
@@ -230,7 +215,7 @@ export default function RegisterPage() {
                   color: '#1b1c17',
                 }}
               >
-                Identity / Email
+                Email
               </Box>
               <Box sx={{ position: 'relative' }}>
                 <EmailIcon
@@ -242,7 +227,6 @@ export default function RegisterPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="USER@EXAMPLE.COM"
-                  required
                   style={inputStyles}
                   onFocus={handleFocus}
                   onBlur={handleBlur}
@@ -263,7 +247,7 @@ export default function RegisterPage() {
                     color: '#1b1c17',
                   }}
                 >
-                  Secret
+                  Password
                 </Box>
                 <Box sx={{ position: 'relative' }}>
                   <LockIcon
@@ -275,7 +259,6 @@ export default function RegisterPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="********"
-                    required
                     style={inputStyles}
                     onFocus={handleFocus}
                     onBlur={handleBlur}
@@ -294,7 +277,7 @@ export default function RegisterPage() {
                     color: '#1b1c17',
                   }}
                 >
-                  Verify Secret
+                  Verify Password
                 </Box>
                 <Box sx={{ position: 'relative' }}>
                   <LockIcon
@@ -306,7 +289,6 @@ export default function RegisterPage() {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="********"
-                    required
                     style={inputStyles}
                     onFocus={handleFocus}
                     onBlur={handleBlur}
@@ -350,7 +332,7 @@ export default function RegisterPage() {
                 },
               }}
             >
-              {loading ? 'REGISTERING...' : 'Register'}
+              {loading ? 'REGISTERING…' : 'Register'}
               <ArrowForwardIcon
                 sx={{
                   fontWeight: 700,

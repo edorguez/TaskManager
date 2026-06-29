@@ -103,7 +103,6 @@ Located in `src/components/ui/`:
 - Centered card on grid background
 - Floating decorative shapes
 - Email + password with icon prefixes
-- Remember me + Forgot password
 - Register link below
 
 ### Register (`/register`)
@@ -118,13 +117,13 @@ Located in `src/components/ui/`:
 - FAB button for quick task creation
 
 ### Task List (`/tasks`)
-- "Sprint Alpha 04" hero section + Completion Rate badge
+- "Task List" hero section
 - Filter tabs (All, Todo, In Progress, Done)
 - Task cards grid with priority, title, description, due date, status
 - Empty state: "Add New Segment" dashed card
 
 ### Create Task (`/tasks/new`)
-- "New Mission" header with TASK_ID
+- "New Task"
 - Form: title, deadline, priority (Low/Med/High), description, category tags
 - "CREATE TASK" bold submit button with bolt icon
 - Success modal on completion

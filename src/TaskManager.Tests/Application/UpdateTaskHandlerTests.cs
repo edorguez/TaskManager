@@ -19,7 +19,7 @@ public class UpdateTaskHandlerTests
 
         var title = TaskTitle.Create("Original").Value;
         var dueDate = DueDate.Create(new DateTime(2026, 6, 1, 0, 0, 0, DateTimeKind.Utc), dateTimeProvider).Value;
-        var task = TaskItem.Create(title, "Original desc", dueDate, "user-1").Value;
+        var task = TaskItem.Create(title, "Original desc", dueDate, 1, "user-1").Value;
 
         repository.GetByIdAsync(task.Id, "user-1").Returns(task);
         unitOfWork.SaveChangesAsync(Arg.Any<CancellationToken>()).Returns(1);

@@ -16,7 +16,7 @@ public sealed class DueDate
 
     public static Result<DueDate> Create(DateTime dueDate, IDateTimeProvider dateTimeProvider)
     {
-        if (dueDate <= dateTimeProvider.UtcNow)
+        if (dueDate.Date < dateTimeProvider.UtcNow.Date)
             return Result.Fail("Due date must be in the future.");
 
         return Result.Ok(new DueDate(dueDate));

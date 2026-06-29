@@ -31,12 +31,13 @@ public class CreateTaskHandlerTests
             "Test Task",
             "Description",
             new DateTime(2026, 6, 1, 0, 0, 0, DateTimeKind.Utc),
+            1,
             "user-1"
         );
 
         var title = TaskTitle.Create(command.Title).Value;
         var dueDate = DueDate.Create(command.DueDate, _dateTimeProvider).Value;
-        var task = TaskItem.Create(title, command.Description, dueDate, command.UserId).Value;
+        var task = TaskItem.Create(title, command.Description, dueDate, command.StatusId, command.UserId).Value;
 
         _repository.AddAsync(Arg.Any<TaskItem>()).Returns(Task.CompletedTask);
         _unitOfWork.SaveChangesAsync(Arg.Any<CancellationToken>()).Returns(1);
@@ -58,6 +59,7 @@ public class CreateTaskHandlerTests
             "",
             "Description",
             new DateTime(2026, 6, 1, 0, 0, 0, DateTimeKind.Utc),
+            1,
             "user-1"
         );
 
@@ -75,6 +77,7 @@ public class CreateTaskHandlerTests
             "Test Task",
             "Description",
             new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc),
+            1,
             "user-1"
         );
 

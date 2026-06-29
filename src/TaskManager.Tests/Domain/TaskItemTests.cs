@@ -22,7 +22,7 @@ public class TaskItemTests
     [Fact]
     public void Create_WithValidData_ReturnsSuccess()
     {
-        var result = TaskItem.Create(_validTitle, "Description", _validDueDate, UserId);
+        var result = TaskItem.Create(_validTitle, "Description", _validDueDate, 1, UserId);
         result.IsSuccess.Should().BeTrue();
         var task = result.Value;
         task.Title.Should().Be(_validTitle);
@@ -35,14 +35,14 @@ public class TaskItemTests
     [Fact]
     public void Create_SetsInitialStatusToTodo()
     {
-        var result = TaskItem.Create(_validTitle, "", _validDueDate, UserId);
+        var result = TaskItem.Create(_validTitle, "", _validDueDate, 1, UserId);
         result.Value.StatusId.Should().Be(1);
     }
 
     [Fact]
     public void Complete_WithTodoStatus_TransitionsToDone()
     {
-        var task = TaskItem.Create(_validTitle, "", _validDueDate, UserId).Value;
+        var task = TaskItem.Create(_validTitle, "", _validDueDate, 1, UserId).Value;
         var result = task.Complete();
         result.IsSuccess.Should().BeTrue();
         task.StatusId.Should().Be(3);
@@ -51,7 +51,7 @@ public class TaskItemTests
     [Fact]
     public void Complete_WhenAlreadyDone_ReturnsFailure()
     {
-        var task = TaskItem.Create(_validTitle, "", _validDueDate, UserId).Value;
+        var task = TaskItem.Create(_validTitle, "", _validDueDate, 1, UserId).Value;
         task.Complete();
         var result = task.Complete();
         result.IsFailed.Should().BeTrue();
@@ -60,7 +60,7 @@ public class TaskItemTests
     [Fact]
     public void Start_WithTodoStatus_TransitionsToInProgress()
     {
-        var task = TaskItem.Create(_validTitle, "", _validDueDate, UserId).Value;
+        var task = TaskItem.Create(_validTitle, "", _validDueDate, 1, UserId).Value;
         var result = task.Start();
         result.IsSuccess.Should().BeTrue();
         task.StatusId.Should().Be(2);
@@ -69,7 +69,7 @@ public class TaskItemTests
     [Fact]
     public void Update_WithValidData_UpdatesTask()
     {
-        var task = TaskItem.Create(_validTitle, "", _validDueDate, UserId).Value;
+        var task = TaskItem.Create(_validTitle, "", _validDueDate, 1, UserId).Value;
         var newTitle = TaskTitle.Create("Updated").Value;
         var newDueDate = DueDate.Create(new DateTime(2026, 7, 1, 0, 0, 0, DateTimeKind.Utc), _dateTimeProvider).Value;
         

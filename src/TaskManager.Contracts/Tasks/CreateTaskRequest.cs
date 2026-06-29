@@ -1,3 +1,3 @@
 namespace TaskManager.Contracts.Tasks;
 
-public record CreateTaskRequest(string Title, string Description, DateTime DueDate);
+public record CreateTaskRequest(string Title, string Description, DateTime DueDate, int StatusId);

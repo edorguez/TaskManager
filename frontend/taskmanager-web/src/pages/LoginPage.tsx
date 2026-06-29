@@ -22,6 +22,15 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    if (!email || !password) {
+      setError('All fields are required');
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError('Email is not valid');
+      return;
+    }
     setLoading(true);
     try {
       const response = await authApi.login(email, password);
@@ -31,8 +40,9 @@ export default function LoginPage() {
       } else {
         setError(response.data.errors?.[0] || 'Login failed');
       }
-    } catch {
-      setError('Invalid email or password');
+    } catch (err) {
+      const data = (err as any)?.response?.data;
+      setError(data?.errors?.[0] || 'Invalid email or password');
     } finally {
       setLoading(false);
     }
@@ -160,7 +170,7 @@ export default function LoginPage() {
             </Alert>
           )}
 
-          <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <Box component="form" onSubmit={handleSubmit} noValidate sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
               <Box
                 component="label"
@@ -173,7 +183,7 @@ export default function LoginPage() {
                   color: '#1b1c17',
                 }}
               >
-                Identity / Email
+                Email
               </Box>
               <Box sx={{ position: 'relative' }}>
                 <EmailIcon
@@ -191,7 +201,6 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="USER@DOMAIN.COM"
-                  required
                   style={{
                     width: '100%',
                     padding: '16px 16px 16px 48px',
@@ -229,7 +238,7 @@ export default function LoginPage() {
                   color: '#1b1c17',
                 }}
               >
-                Secret / Password
+                Password
               </Box>
               <Box sx={{ position: 'relative' }}>
                 <LockIcon
@@ -247,7 +256,6 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  required
                   style={{
                     width: '100%',
                     padding: '16px 16px 16px 48px',
@@ -271,47 +279,6 @@ export default function LoginPage() {
                   }}
                 />
               </Box>
-            </Box>
-
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 1 }}>
-              <Box
-                component="label"
-                sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer' }}
-              >
-                <input type="checkbox" style={{ display: 'none' }} />
-                <Box
-                  sx={{
-                    width: 32,
-                    height: 32,
-                    border: '4px solid #1b1c17',
-                    backgroundColor: '#ffffff',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <Box sx={{ color: '#1b1c17', fontFamily: '"Space Mono", monospace', fontWeight: 700 }}>✓</Box>
-                </Box>
-                <Box
-                  component="span"
-                  sx={{ fontFamily: '"Space Mono", monospace', fontSize: '14px', textTransform: 'uppercase' }}
-                >
-                  Remember
-                </Box>
-              </Box>
-              <Link
-                href="#"
-                sx={{
-                  fontFamily: '"Space Mono", monospace',
-                  fontSize: '14px',
-                  textTransform: 'uppercase',
-                  color: '#1b1c17',
-                  textDecoration: 'underline',
-                  '&:hover': { color: '#5e6300' },
-                }}
-              >
-                Recover?
-              </Link>
             </Box>
 
             <Box

@@ -47,7 +47,7 @@ public class TaskEndpointsTests
     [Fact]
     public async Task CreateTask_WithValidData_ReturnsCreatedTask()
     {
-        var command = new CreateTaskCommand("New Task", "Desc", DateTime.UtcNow.AddDays(1), "test-user-id");
+        var command = new CreateTaskCommand("New Task", "Desc", DateTime.UtcNow.AddDays(1), 1, "test-user-id");
         var response = new TaskResponse(Guid.NewGuid(), "New Task", "Desc", "Todo", DateTime.UtcNow.AddDays(1), DateTime.UtcNow, null);
 
         _mediator.Send(command).Returns(Result.Ok(response));

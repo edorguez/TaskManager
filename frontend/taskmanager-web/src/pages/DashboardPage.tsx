@@ -7,25 +7,10 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CodeIcon from '@mui/icons-material/Code';
 import BrushIcon from '@mui/icons-material/Brush';
 import StorageIcon from '@mui/icons-material/Storage';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
 import AddIcon from '@mui/icons-material/Add';
 import { StatCard } from '../components/ui/StatCard';
 import { SectionHeader } from '../components/ui/SectionHeader';
 import { useTaskStore } from '../store/taskStore';
-
-function getPriorityColor(status: string) {
-  const s = status.toLowerCase();
-  if (s.includes('high')) return '#ba1a1a';
-  if (s.includes('mid')) return '#0054d6';
-  return '#006e27';
-}
-
-function getPriorityLabel(status: string) {
-  const s = status.toLowerCase();
-  if (s.includes('high')) return 'HIGH';
-  if (s.includes('mid')) return 'MID';
-  return 'LOW';
-}
 
 export default function DashboardPage() {
   const navigate = useNavigate();
@@ -39,35 +24,16 @@ export default function DashboardPage() {
   const inProgressCount = tasks.filter((t) => t.status === 'InProgress').length;
   const doneCount = tasks.filter((t) => t.status === 'Done').length;
 
-  const recentTasks = tasks.slice(0, 3);
+  const recentTasks = tasks.slice(0, 5);
 
   const taskIcons = [<CodeIcon key="1" />, <BrushIcon key="2" />, <StorageIcon key="3" />];
   const taskBgColors = ['#dae1ff', '#6bff83', '#e1ec00'];
-
-  const dummyAvatars = ['#00fe66', '#f3ff00', '#0054d6'];
 
   return (
     <Box>
       <SectionHeader
         title="System Overview"
-        subtitle="Welcome back, Captain. Productivity is at 84%."
-        badge={
-          <Box
-            sx={{
-              backgroundColor: '#dae1ff',
-              border: '4px solid #1b1c17',
-              p: '8px 16px',
-              boxShadow: '6px 6px 0px 0px rgba(0,0,0,1)',
-              fontFamily: '"Space Mono", monospace',
-              fontWeight: 700,
-              fontSize: '14px',
-              textTransform: 'uppercase',
-              color: '#1b1c17',
-            }}
-          >
-            Sprint 12: Active
-          </Box>
-        }
+        subtitle="Welcome back, Captain."
       />
 
       <Box
@@ -82,39 +48,30 @@ export default function DashboardPage() {
           label="Total Tasks"
           value={todoCount + inProgressCount + doneCount || 0}
           icon={<TaskIcon />}
-          trend="+5 from yesterday"
         />
         <StatCard
           label="In Progress"
           value={inProgressCount}
           icon={<SyncIcon />}
-          trend="Priority focused"
           bgColor="#f3ff00"
         />
         <StatCard
-          label="Completed"
+          label="Done"
           value={doneCount}
           icon={<CheckCircleIcon />}
-          trend="Weekly goal reached"
           bgColor="#00fe66"
         />
       </Box>
 
       <Box
         sx={{
-          display: 'grid',
-          gridTemplateColumns: { xs: '1fr', lg: '2fr 1fr' },
-          gap: '24px',
+          backgroundColor: '#ffffff',
+          border: '4px solid #1b1c17',
+          boxShadow: '6px 6px 0px 0px rgba(0,0,0,1)',
+          mb: 4,
         }}
       >
         <Box
-          sx={{
-            backgroundColor: '#ffffff',
-            border: '4px solid #1b1c17',
-            boxShadow: '6px 6px 0px 0px rgba(0,0,0,1)',
-          }}
-        >
-          <Box
             sx={{
               p: 2,
               borderBottom: '4px solid #1b1c17',
@@ -215,181 +172,11 @@ export default function DashboardPage() {
                       </Box>
                     </Box>
                   </Box>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                    <Box
-                      sx={{
-                        backgroundColor: getPriorityColor('mid'),
-                        color: '#ffffff',
-                        fontFamily: '"Space Mono", monospace',
-                        fontWeight: 700,
-                        fontSize: '12px',
-                        px: 1.5,
-                        py: 0.5,
-                        border: '2px solid #1b1c17',
-                      }}
-                    >
-                      {getPriorityLabel('mid')}
-                    </Box>
-                    <MoreVertIcon sx={{ cursor: 'pointer', '&:hover': { transform: 'scale(1.1)' }, transition: 'transform 0.15s' }} />
-                  </Box>
+
                 </Box>
               ))
             )}
           </Box>
-        </Box>
-
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          <Box
-            sx={{
-              backgroundColor: '#ffffff',
-              border: '4px solid #1b1c17',
-              boxShadow: '6px 6px 0px 0px rgba(0,0,0,1)',
-              p: '16px',
-              flex: 1,
-            }}
-          >
-            <Box
-              component="h3"
-              sx={{
-                fontFamily: '"Montserrat", sans-serif',
-                fontWeight: 800,
-                fontSize: '24px',
-                textTransform: 'uppercase',
-                mb: 3,
-                color: '#1b1c17',
-              }}
-            >
-              Velocity
-            </Box>
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'flex-end',
-                justifyContent: 'space-between',
-                height: 192,
-                gap: 1.5,
-                px: 1,
-              }}
-            >
-              {[
-                { day: 'M', h: '60%', bg: '#5e6300' },
-                { day: 'T', h: '85%', bg: '#006e27' },
-                { day: 'W', h: '45%', bg: '#0054d6' },
-                { day: 'T', h: '70%', bg: '#ba1a1a' },
-                { day: 'F', h: '100%', bg: '#f3ff00' },
-              ].map((bar, i) => (
-                <Box
-                  key={i}
-                  sx={{
-                    flex: 1,
-                    backgroundColor: bar.bg,
-                    border: '4px solid #1b1c17',
-                    height: bar.h,
-                    position: 'relative',
-                    transition: 'all 0.2s ease',
-                    cursor: 'help',
-                    '&:hover': {
-                      height: `calc(${bar.h} + 10%)`,
-                    },
-                  }}
-                />
-              ))}
-            </Box>
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                mt: 2,
-                fontFamily: '"Space Mono", monospace',
-                fontSize: '10px',
-                color: '#474832',
-                textTransform: 'uppercase',
-                borderTop: '2px solid #1b1c17',
-                pt: 1,
-              }}
-            >
-              <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span>
-            </Box>
-          </Box>
-
-          <Box
-            sx={{
-              backgroundColor: '#e1ec00',
-              border: '4px solid #1b1c17',
-              boxShadow: '6px 6px 0px 0px rgba(0,0,0,1)',
-              p: '16px',
-            }}
-          >
-            <Box
-              component="h3"
-              sx={{
-                fontFamily: '"Montserrat", sans-serif',
-                fontWeight: 800,
-                fontSize: '24px',
-                textTransform: 'uppercase',
-                mb: 2,
-                color: '#1b1c17',
-              }}
-            >
-              On Duty
-            </Box>
-            <Box sx={{ display: 'flex' }}>
-              {dummyAvatars.map((bg, i) => (
-                <Box
-                  key={i}
-                  sx={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: '50%',
-                    border: '4px solid #1b1c17',
-                    backgroundColor: bg,
-                    ml: i > 0 ? -1.5 : 0,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontFamily: '"Space Mono", monospace',
-                    fontWeight: 700,
-                    fontSize: '12px',
-                    color: '#1b1c17',
-                  }}
-                >
-                  {String.fromCharCode(65 + i)}
-                </Box>
-              ))}
-              <Box
-                sx={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: '50%',
-                  border: '4px solid #1b1c17',
-                  backgroundColor: '#1b1c17',
-                  color: '#ffffff',
-                  ml: -1.5,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontFamily: '"Space Mono", monospace',
-                  fontWeight: 700,
-                  fontSize: '10px',
-                }}
-              >
-                +4
-              </Box>
-            </Box>
-            <Box
-              sx={{
-                fontFamily: '"Space Grotesk", sans-serif',
-                fontWeight: 400,
-                fontSize: '16px',
-                fontStyle: 'italic',
-                mt: 2,
-                color: '#1b1c17',
-              }}
-            >
-              7 team members currently active.
-            </Box>
-          </Box>
-        </Box>
       </Box>
 
       <Box

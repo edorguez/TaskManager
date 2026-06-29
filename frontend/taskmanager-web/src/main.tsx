@@ -5,7 +5,10 @@ import CssBaseline from '@mui/material/CssBaseline';
 import { ThemeProvider as MuiThemeProvider } from '@mui/material/styles';
 import theme from './theme/theme';
 import App from './App';
+import { useAuthStore } from './store/authStore';
 import './styles/global.scss';
+
+useAuthStore.getState().initialize();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

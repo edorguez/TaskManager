@@ -19,14 +19,14 @@ public class TaskItem : AggregateRoot
     public DateTime CreatedAt { get; private set; }
     public DateTime? UpdatedAt { get; private set; }
 
-    public static Result<TaskItem> Create(TaskTitle title, string description, DueDate dueDate, string createdByUserId)
+    public static Result<TaskItem> Create(TaskTitle title, string description, DueDate dueDate, int statusId, string createdByUserId)
     {
         var task = new TaskItem
         {
             Id = Guid.NewGuid(),
             Title = title,
             Description = description ?? string.Empty,
-            StatusId = 1,
+            StatusId = statusId,
             DueDate = dueDate,
             CreatedByUserId = createdByUserId,
             CreatedAt = DateTime.UtcNow
