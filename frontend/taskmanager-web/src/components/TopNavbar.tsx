@@ -1,11 +1,12 @@
 import { useNavigate } from 'react-router-dom';
 import { Box } from '@mui/material';
 import LogoutIcon from '@mui/icons-material/Logout';
+import PersonIcon from '@mui/icons-material/Person';
 import { useAuthStore } from '../store/authStore';
 
 export default function TopNavbar() {
   const navigate = useNavigate();
-  const { logout } = useAuthStore();
+  const { logout, user } = useAuthStore();
 
   const handleLogout = () => {
     logout();
@@ -17,7 +18,7 @@ export default function TopNavbar() {
       component="header"
       sx={{
         display: { xs: 'none', md: 'flex' },
-        justifyContent: 'flex-end',
+        justifyContent: 'space-between',
         alignItems: 'center',
         width: '100%',
         px: '24px',
@@ -29,6 +30,25 @@ export default function TopNavbar() {
         flexShrink: 0,
       }}
     >
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1,
+          border: '2px solid #1b1c17',
+          backgroundColor: '#e4e3db',
+          color: '#1b1c17',
+          fontFamily: '"Space Mono", monospace',
+          fontWeight: 700,
+          fontSize: '12px',
+          textTransform: 'uppercase',
+          px: 1.5,
+          py: 0.5,
+        }}
+      >
+        <PersonIcon sx={{ fontSize: 14 }} />
+        {user?.email}
+      </Box>
       <Box
         component="button"
         onClick={handleLogout}

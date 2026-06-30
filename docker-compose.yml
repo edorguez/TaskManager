@@ -15,6 +15,11 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
 
   api:
     build:
@@ -22,7 +27,7 @@ services:
       dockerfile: src/TaskManager.API/Dockerfile
     container_name: taskmanager-api
     environment:
-      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_URLS: http://0.0.0.0:8080
       ConnectionStrings__DefaultConnection: Host=postgres;Database=${POSTGRES_DB:-taskmanager};Username=${POSTGRES_USER:-taskmanager};Password=${POSTGRES_PASSWORD:-taskmanager_secret}
       Jwt__Secret: ${JWT_SECRET:-your_super_secret_jwt_key_min_32_chars_long_here}
@@ -30,22 +35,43 @@ services:
       Jwt__Audience: ${JWT_AUDIENCE:-TaskManagerWeb}
       FrontendUrl: http://localhost:3000
     ports:
-      - "5000:8080"
+      - "8080:8080"
     depends_on:
       postgres:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 15s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
 
   frontend:
     build:
       context: frontend/taskmanager-web
       dockerfile: Dockerfile
     container_name: taskmanager-web
-    environment:
-      VITE_API_URL: http://localhost:5000
     ports:
       - "3000:80"
     depends_on:
-      - api
+      api:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/"]
+      interval: 30s
+      timeout: 10s
+      start_period: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
 
 volumes:
   postgres_data:

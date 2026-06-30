@@ -1,4 +1,5 @@
 using TaskManager.Domain.Entities;
+using TaskManager.Domain.Events;
 using TaskManager.Domain.Interfaces;
 using TaskManager.Domain.ValueObjects;
 
@@ -40,24 +41,6 @@ public class TaskItemTests
     }
 
     [Fact]
-    public void Complete_WithTodoStatus_TransitionsToDone()
-    {
-        var task = TaskItem.Create(_validTitle, "", _validDueDate, 1, UserId).Value;
-        var result = task.Complete();
-        result.IsSuccess.Should().BeTrue();
-        task.StatusId.Should().Be(3);
-    }
-
-    [Fact]
-    public void Complete_WhenAlreadyDone_ReturnsFailure()
-    {
-        var task = TaskItem.Create(_validTitle, "", _validDueDate, 1, UserId).Value;
-        task.Complete();
-        var result = task.Complete();
-        result.IsFailed.Should().BeTrue();
-    }
-
-    [Fact]
     public void Start_WithTodoStatus_TransitionsToInProgress()
     {
         var task = TaskItem.Create(_validTitle, "", _validDueDate, 1, UserId).Value;
@@ -77,5 +60,59 @@ public class TaskItemTests
         result.IsSuccess.Should().BeTrue();
         task.Title.Should().Be(newTitle);
         task.Description.Should().Be("Updated description");
+    }
+
+    [Fact]
+    public void Update_RaisesTaskUpdatedDomainEvent()
+    {
+        var task = TaskItem.Create(_validTitle, "", _validDueDate, 1, UserId).Value;
+        var newTitle = TaskTitle.Create("Updated").Value;
+        var newDueDate = DueDate.Create(new DateTime(2026, 7, 1, 0, 0, 0, DateTimeKind.Utc), _dateTimeProvider).Value;
+
+        task.Update(newTitle, "Updated description", newDueDate);
+
+        task.DomainEvents.Should().Contain(e => e.GetType().Name == "TaskUpdatedDomainEvent");
+    }
+
+    [Fact]
+    public void Start_WhenNotTodo_ReturnsFailure()
+    {
+        var task = TaskItem.Create(_validTitle, "", _validDueDate, 2, UserId).Value;
+
+        var result = task.Start();
+
+        result.IsFailed.Should().BeTrue();
+    }
+
+    [Fact]
+    public void ChangeStatus_ToValidStatus_UpdatesStatus()
+    {
+        var task = TaskItem.Create(_validTitle, "", _validDueDate, 1, UserId).Value;
+
+        var result = task.ChangeStatus(2);
+
+        result.IsSuccess.Should().BeTrue();
+        task.StatusId.Should().Be(2);
+    }
+
+    [Fact]
+    public void ChangeStatus_WithInvalidStatus_ReturnsFailure()
+    {
+        var task = TaskItem.Create(_validTitle, "", _validDueDate, 1, UserId).Value;
+
+        var result = task.ChangeStatus(0);
+
+        result.IsFailed.Should().BeTrue();
+    }
+
+    [Fact]
+    public void ChangeStatus_WithSameStatus_ReturnsOk()
+    {
+        var task = TaskItem.Create(_validTitle, "", _validDueDate, 1, UserId).Value;
+
+        var result = task.ChangeStatus(1);
+
+        result.IsSuccess.Should().BeTrue();
+        task.StatusId.Should().Be(1);
     }
 }

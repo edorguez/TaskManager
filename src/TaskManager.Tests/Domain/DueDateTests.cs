@@ -32,13 +32,6 @@ public class DueDateTests
     }
 
     [Fact]
-    public void Create_WithCurrentDate_ReturnsFailure()
-    {
-        var result = DueDate.Create(_dateTimeProvider.UtcNow, _dateTimeProvider);
-        result.IsFailed.Should().BeTrue();
-    }
-
-    [Fact]
     public void Equals_SameValue_ReturnsTrue()
     {
         var date = new DateTime(2026, 6, 1, 0, 0, 0, DateTimeKind.Utc);

@@ -14,22 +14,20 @@ Task Manager is a neobrutalist task management application. The design language 
 
 ## Color Palette
 
-All colors are defined as CSS custom properties in `src/styles/tokens.css`.
-
-| Token | Hex | Usage |
+| Color | Hex | Usage |
 |---|---|---|
-| `--background` | `#fbf9f1` | Page background |
-| `--on-background` | `#1b1c17` | Text on background |
-| `--primary` | `#5e6300` | Primary brand |
-| `--primary-container` | `#f3ff00` | Primary surfaces, FAB, CTAs |
-| `--secondary` | `#006e27` | Secondary brand |
-| `--secondary-container` | `#00fe66` | Success states, active filters |
-| `--tertiary` | `#0054d6` | Info, tertiary brand |
-| `--error` | `#ba1a1a` | Error/danger |
-| `--error-container` | `#ffdad6` | Error surfaces |
-| `--surface` | `#fbf9f1` | Default surface |
-| `--surface-variant` | `#e4e3db` | Subtle surface variant |
-| `--on-surface-variant` | `#474832` | Muted text |
+| Background | `#fbf9f1` | Page background |
+| On-background | `#1b1c17` | Text on background |
+| Primary | `#5e6300` | Primary brand |
+| Primary container | `#f3ff00` | Primary surfaces, FAB, CTAs |
+| Secondary | `#006e27` | Secondary brand |
+| Secondary container | `#00fe66` | Success states, active filters |
+| Tertiary | `#0054d6` | Info, tertiary brand |
+| Error | `#ba1a1a` | Error/danger |
+| Error container | `#ffdad6` | Error surfaces |
+| Surface | `#fbf9f1` | Default surface |
+| Surface variant | `#e4e3db` | Subtle surface variant |
+| On-surface variant | `#474832` | Muted text |
 
 ## Typography
 
@@ -44,10 +42,10 @@ All colors are defined as CSS custom properties in `src/styles/tokens.css`.
 
 ## Spacing
 
-- `--gutter`: 24px (page padding)
-- `--stack-sm`: 8px
-- `--stack-md`: 16px
-- `--stack-lg`: 32px
+- Page padding: 24px
+- Small: 8px
+- Medium: 16px
+- Large: 32px
 
 ## Shadows
 
@@ -69,13 +67,19 @@ Located in `src/components/ui/`:
 | `NeoErrorButton` | Red (`#ba1a1a`) variant |
 | `NeoCard` | Styled MUI Card with border + shadow + hover lift |
 | `NeoInput` | Styled MUI TextField — focus turns background to primary-container |
-| `NeoBadge` | Priority badge (HIGH/MID/LOW with color coding) |
 | `StatusChip` | Task status chip (Todo/InProgress/Done) |
 | `StatCard` | Dashboard stat card (label + value + icon + trend) |
 | `SectionHeader` | Reusable section header with optional subtitle, badge, action |
-| `SearchBar` | Inline search input with search icon |
 | `NeoModal` | Success/confirm modal with neobrutalism styling |
 | `NeoConfirmButton` | Modal confirmation button |
+
+Board components (located in `src/components/board/`):
+
+| Component | Description |
+|---|---|
+| `Board` | Kanban board with 3 columns, drag-and-drop via `@dnd-kit`, drag overlay |
+| `Column` | Droppable column with title, task count, sortable task list, "Add Task" button |
+| `BoardCard` | Draggable task card with title, description, edit/delete actions |
 
 ## Layout
 
@@ -83,50 +87,57 @@ Located in `src/components/ui/`:
 - **Mobile:** Bottom navigation bar (80px) replaces sidebar; top navbar collapses
 
 ### Sidebar (`Sidebar.tsx`)
-- Project name + workspace label
-- "NEW TASK" button
-- Nav items: Dashboard (/), Tasks (/tasks), Analytics, Calendar
-- Footer items: Help, Archive
+- Project name "TASK MANAGER"
+- "NEW TASK" link (navigates to `/tasks/new`)
+- Nav items: Dashboard (`/`), Tasks (`/tasks`)
+- Active route highlighted with green background and shadow
 
 ### TopNavbar (`TopNavbar.tsx`)
-- Brand name (TASK MANAGER)
-- Search bar (hidden on tablet/mobile)
-- Notifications icon, Settings icon, User avatar, Logout button
+- User email badge (with person icon, `Space Mono` uppercase, bordered)
+- Red logout button with `LogoutIcon`
 
 ### MobileNav (`MobileNav.tsx`)
-- Dash, Tasks, New (FAB), Logout tabs
+- Dash, Tasks, Logout tabs
 - Fixed at bottom, visible below `md` breakpoint
+- Active route highlighted in green
 
 ## Page Templates
 
 ### Login (`/login`)
 - Centered card on grid background
 - Floating decorative shapes
-- Email + password with icon prefixes
+- Email + password fields with client-side validation (required, email format)
 - Register link below
+- On success: stores JWT via Zustand, redirects to `/`
 
 ### Register (`/register`)
 - Same layout pattern as login
-- Full name, email, password, confirm password
+- Email, password, confirm password fields
+- Password complexity: min 6 chars, at least one uppercase, lowercase, digit, and special character
+- Password match validation
 - "New Operative Enrollment" badge
+- On success: auto-logs in and redirects to `/`
 
 ### Dashboard (`/`)
-- "System Overview" section header + Sprint badge
-- 3 stat cards (Total, In Progress, Completed)
-- Recent Tasks list + Velocity chart + Team status card
-- FAB button for quick task creation
+- "System Overview" section header
+- 3 stat cards: Total, In Progress, Done (counts from fetched tasks)
+- Recent Tasks list (last 5 tasks with icons, truncated descriptions)
+- FAB button (bottom-right) for quick task creation
 
 ### Task List (`/tasks`)
-- "Task List" hero section
-- Filter tabs (All, Todo, In Progress, Done)
-- Task cards grid with priority, title, description, due date, status
-- Empty state: "Add New Segment" dashed card
+- Kanban board with 3 columns: Todo, InProgress, Done
+- Drag-and-drop via `@dnd-kit` to change task status
+- Each column shows title + task count + "Add Task" button
+- Task cards show title, description, edit button, delete button
+- Delete confirmation via `NeoModal`
+- Success/error feedback via `Snackbar`
+- Empty state per column: "No tasks yet"
 
 ### Create Task (`/tasks/new`)
-- "New Task"
-- Form: title, deadline, priority (Low/Med/High), description, category tags
-- "CREATE TASK" bold submit button with bolt icon
-- Success modal on completion
+- Form: title (required, max 200), due date (required, min today), status (dropdown), description (multiline)
+- Pre-selectable status via `?statusId` query param (used by column "Add Task" buttons)
+- "CREATE TASK" submit button
+- Success modal on completion, then navigates to `/tasks`
 
 ### Edit Task (`/tasks/:id/edit`)
 - Same layout as create but pre-filled
@@ -138,20 +149,19 @@ Located in `src/components/ui/`:
 - **Hover:** Elements shift 2px right and down; shadow reduces from 6px→4px
 - **Active/Press:** Elements shift 4px+ right and down; shadow disappears
 - **Focus (inputs):** Background becomes `#f3ff00`, shadow increases, element shifts up/left
-- **FAB hover:** Shadow reduces, shifts up; tooltip appears
-- **Counters:** Numbers animate from 0 to final value on page load
+- **FAB hover:** Shadow reduces, shifts up
 
 ## File Structure
 
 ```
 src/
   styles/
-    tokens.css          — CSS custom properties (colors, spacing, fonts)
     global.scss         — Global resets, scrollbar, selection
   theme/
     theme.ts            — MUI createTheme with full component overrides
   components/
-    ui/                 — Shared neobrutalism components
+    ui/                 — Shared neobrutalism components (NeoButton, NeoCard, etc.)
+    board/              — Kanban board (Board, Column, BoardCard)
     Layout.tsx          — App shell: Sidebar + TopNavbar + Outlet + MobileNav
     Sidebar.tsx         — Left navigation
     TopNavbar.tsx       — Top header bar
@@ -161,7 +171,7 @@ src/
     LoginPage.tsx       — Login
     RegisterPage.tsx    — Registration
     DashboardPage.tsx   — Dashboard with stats and recent tasks
-    TaskListPage.tsx    — Task list with filters
+    TaskListPage.tsx    — Kanban board with drag-and-drop
     TaskCreatePage.tsx  — Task creation
     TaskEditPage.tsx    — Task editing
     NotFoundPage.tsx    — 404 page

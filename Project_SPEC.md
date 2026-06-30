@@ -102,7 +102,6 @@ TaskManager/
 │   │   │   ├── TaskItem.cs
 │   │   │   └── TaskStatus.cs
 │   │   ├── Events/
-│   │   │   ├── TaskCompletedDomainEvent.cs
 │   │   │   ├── TaskCreatedDomainEvent.cs
 │   │   │   └── TaskUpdatedDomainEvent.cs
 │   │   ├── Interfaces/
@@ -141,8 +140,6 @@ TaskManager/
 │   │   │   └── MappingProfile.cs
 │   │   ├── Tasks/
 │   │   │   ├── Commands/
-│   │   │   │   ├── CompleteTaskCommand.cs
-│   │   │   │   ├── CompleteTaskHandler.cs
 │   │   │   │   ├── CreateTaskCommand.cs
 │   │   │   │   ├── CreateTaskHandler.cs
 │   │   │   │   ├── CreateTaskValidator.cs
@@ -344,7 +341,7 @@ public class TaskItem : AggregateRoot
 **Behavior methods:**
 - `Update(TaskTitle, string, DueDate)` — updates fields, raises `TaskUpdatedDomainEvent`
 - `Start()` — transitions `Todo` → `InProgress`, fails if not `Todo`
-- `Complete()` — transitions any status → `Done`, fails if already `Done`, raises `TaskCompletedDomainEvent`
+- `ChangeStatus(int)` — transitions to any valid status (1-3), fails if invalid
 
 **EF Core mapping:** Private parameterless constructor for EF Core. Value objects mapped via `OwnsOne`.
 
@@ -365,13 +362,13 @@ Seeded rows: `(1, "Todo")`, `(2, "InProgress")`, `(3, "Done")`.
 #### `TaskTitle`
 - Wraps a `string Value`
 - Validates: not null/empty, max 200 characters
-- Immutable (init-only setter)
-- Implicit equality via record semantics (or overridden `Equals`)
+- Immutable (private setter)
+- Implicit equality via overridden `Equals`
 
 #### `DueDate`
 - Wraps a `DateTime Value`
 - Validates: must be in the future (uses `IDateTimeProvider` for testability)
-- Immutable (init-only setter)
+- Immutable (private setter)
 
 ### 6.4 Domain Events
 
@@ -379,7 +376,7 @@ Seeded rows: `(1, "Todo")`, `(2, "InProgress")`, `(3, "Done")`.
 |-------|-------------|---------|
 | `TaskCreatedDomainEvent` | `TaskItem.Create()` | TaskId, CreatedByUserId |
 | `TaskUpdatedDomainEvent` | `TaskItem.Update()` | TaskId, CreatedByUserId |
-| `TaskCompletedDomainEvent` | `TaskItem.Complete()` | TaskId, CreatedByUserId |
+
 
 ### 6.5 Repository Interfaces
 
@@ -465,10 +462,9 @@ A generic behavior that wraps handler execution:
 
 | Command | Handler | Validator | Description |
 |---------|---------|-----------|-------------|
-| `CreateTaskCommand` | `CreateTaskHandler` | `CreateTaskValidator` | Creates task via `TaskItem.Create()`, persists, maps to `TaskDto` |
-| `UpdateTaskCommand` | `UpdateTaskHandler` | `UpdateTaskValidator` | Fetches task, calls `Update()`, persists |
+| `CreateTaskCommand` | `CreateTaskHandler` | `CreateTaskValidator` | Creates task via `TaskItem.Create()`, persists, maps to `TaskResponse` |
+| `UpdateTaskCommand` | `UpdateTaskHandler` | `UpdateTaskValidator` | Fetches task, calls `Update()` + `ChangeStatus()`, persists |
 | `DeleteTaskCommand` | `DeleteTaskHandler` | — | Fetches task, deletes |
-| `CompleteTaskCommand` | `CompleteTaskHandler` | — | Fetches task, calls `Complete()`, persists |
 
 #### Queries
 
@@ -531,7 +527,7 @@ public class ApiResponse  // Non-generic helper
 public record RegisterRequest(string Email, string Password, string ConfirmPassword);
 public record LoginRequest(string Email, string Password);
 public record AuthResponse(string Token, string Email, DateTime ExpiresAt);
-public record CreateTaskRequest(string Title, string Description, DateTime DueDate);
+public record CreateTaskRequest(string Title, string Description, DateTime DueDate, int StatusId);
 public record UpdateTaskRequest(string Title, string Description, DateTime DueDate, int StatusId);
 public record TaskResponse(Guid Id, string Title, string Description, string Status, DateTime DueDate, DateTime CreatedAt, DateTime? UpdatedAt);
 public record TaskStatusResponse(int Id, string Name);
@@ -566,7 +562,7 @@ public record TaskStatusResponse(int Id, string Name);
 
 #### `UnitOfWork`
 - Wraps `ApplicationDbContext`
-- `SaveChangesAsync`: saves, then dispatches domain events from tracked entities
+- `SaveChangesAsync`: saves changes to the database
 
 ### 9.2 Identity
 
@@ -581,7 +577,7 @@ public record TaskStatusResponse(int Id, string Name);
 #### `JwtTokenService`
 - Generates JWT with: `sub` (userId), `email`, `iat`, `exp`
 - Reads secret/issuer/audience from `JwtSettings` (bound from `appsettings.json` / environment variables)
-- `exp` configured via `JwtSettings.ExpirationInMinutes` (default 60)
+- `exp` is set to 24 hours from generation (hardcoded)
 
 ### 9.3 Repositories
 
@@ -617,13 +613,11 @@ public record TaskStatusResponse(int Id, string Name);
 ### 10.1 Program.cs
 
 ```csharp
-// Service registration
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddOpenApi();
 builder.Services.AddCors(...);
 
-// Middleware pipeline
 app.UseMiddleware<ErrorHandlingMiddleware>();
 app.UseCors("AllowFrontend");
 app.MapOpenApi();
@@ -631,13 +625,12 @@ app.MapScalarApiReference(options => { ... });
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Endpoint mapping
 app.MapAuthEndpoints();
 app.MapTaskEndpoints();
 app.MapGet("/api/health", () => Results.Ok(new { status = "healthy" }));
 
-// Auto-migrate on startup
-db.Database.Migrate();
+if (!app.Environment.IsEnvironment("Testing"))
+    db.Database.Migrate();
 ```
 
 ### 10.2 Endpoints
@@ -659,7 +652,6 @@ db.Database.Migrate();
 | POST | `/api/tasks` | Yes | `CreateTaskHandler` | Create task |
 | PUT | `/api/tasks/{id:guid}` | Yes | `UpdateTaskHandler` | Update task |
 | DELETE | `/api/tasks/{id:guid}` | Yes | `DeleteTaskHandler` | Delete task |
-| PATCH | `/api/tasks/{id:guid}/complete` | Yes | `CompleteTaskHandler` | Mark done |
 | GET | `/api/tasks/statuses` | Yes | `GetTaskStatusesHandler` | List statuses |
 
 All task endpoints extract `UserId` from `ClaimsPrincipal` via `ClaimTypes.NameIdentifier` and pass it to handlers.
@@ -679,8 +671,8 @@ return Results.NotFound(ApiResponse.Fail(result.Errors.Select(e => e.Message)));
 
 #### `ErrorHandlingMiddleware`
 - Catches unhandled exceptions
-- Returns `500` with envelope format: `{ success: false, data: null, errors: ["Internal server error"] }`
-- In development, includes exception details in response
+- Returns `500` with envelope format: `{ success: false, data: null, errors: ["An internal server error occurred."] }`
+- Logs the exception via `ILogger<ErrorHandlingMiddleware>`
 
 ### 10.5 OpenAPI / Scalar
 
@@ -739,7 +731,7 @@ src/TaskManager.Tests/
 |-----------|-----------|----------------|
 | `TaskTitleTests` | ~4 | Empty, null, max length, valid |
 | `DueDateTests` | ~4 | Past date, future date, valid |
-| `TaskItemTests` | ~8 | Create, update, complete, start, invalid transitions |
+| `TaskItemTests` | ~9 | Create, update, start, change status, invalid transitions, domain events |
 | `TaskStatusTests` | ~3 | Seeded values, immutability |
 | `CreateTaskHandlerTests` | ~4 | Success, validation failure, repository error |
 | `GetAllTasksHandlerTests` | ~3 | Success, empty list |
@@ -804,7 +796,6 @@ interface TaskState {
   createTask: (data: CreateTaskDto) => Promise<Task>;
   updateTask: (id: string, data: UpdateTaskDto) => Promise<Task>;
   deleteTask: (id: string) => Promise<void>;
-  completeTask: (id: string) => Promise<void>;
   getTaskById: (id: string) => Promise<Task | null>;
 }
 ```
@@ -814,13 +805,13 @@ All mutations update the local `tasks` array optimistically after the API call s
 ### 12.4 API Client (Axios)
 
 `client.ts` creates a configured Axios instance:
-- **Base URL:** `import.meta.env.VITE_API_URL` (default `http://localhost:5000`)
+- **Base URL:** `import.meta.env.VITE_API_URL` (default `http://localhost:8080`)
 - **Request interceptor:** Injects `Authorization: Bearer <token>` from `authStore`
 - **Response interceptor:** On 401, logs out and redirects to `/login`
 
 Separate modules:
 - `auth.ts` — `login()`, `register()`, `getMe()`
-- `tasks.ts` — `getAll()`, `getById()`, `create()`, `update()`, `delete()`, `complete()`, `getStatuses()`
+- `tasks.ts` — `getAll()`, `getById()`, `create()`, `update()`, `delete()`, `getStatuses()`
 
 ### 12.5 TypeScript Types
 
@@ -872,17 +863,32 @@ interface User {
 
 ### 12.6 UI Components
 
-- **`Layout.tsx`** — AppShell with MUI `AppBar` + `Drawer` + responsive container
+- **`Layout.tsx`** — AppShell: Sidebar (desktop left) + TopNavbar (desktop top) + `<Outlet />` + MobileNav (bottom mobile)
 - **`ProtectedRoute.tsx`** — Redirects to `/login` if not authenticated
-- **`TaskCard.tsx`** — Material UI `Card` displaying task summary with status chip
-- **`TaskForm.tsx`** — Shared form component for create/edit with validation
+- **`Sidebar.tsx`** — Desktop nav with app title, NEW TASK link, Dashboard/Tasks nav items
+- **`TopNavbar.tsx`** — User email badge + logout button
+- **`MobileNav.tsx`** — Bottom nav with Dash, Tasks, Logout tabs
+- **`ui/NeoButton.tsx`** — Styled button with 4px black border, hard shadow, hover/active transforms (4 variants)
+- **`ui/NeoCard.tsx`** — Styled card with border + shadow + hover lift
+- **`ui/NeoInput.tsx`** — Styled text field with focus animation
+- **`ui/NeoModal.tsx`** — Full-screen backdrop modal with confirmation button
+- **`ui/NeoChip.tsx`** — `StatusChip` for task status labels
+- **`ui/StatCard.tsx`** — Dashboard stat card (label + value + icon)
+- **`ui/SectionHeader.tsx`** — Section title + optional subtitle
+- **`board/Board.tsx`** — Kanban board with 3 droppable columns and drag-and-drop via `@dnd-kit`
+- **`board/Column.tsx`** — Single droppable column with sortable task cards
+- **`board/BoardCard.tsx`** — Draggable task card with title, description, edit/delete actions
 
 ### 12.7 MUI Theme
 
 Custom theme (`theme.ts`) with:
-- Primary color: custom brand palette
-- Typography: Roboto via `@fontsource/roboto`
-- Components default overrides
+- Primary color: `#5e6300` (olive-green)
+- Secondary: `#006e27` (green)
+- Error: `#ba1a1a` (red)
+- Background: `#fbf9f1` (off-white)
+- Typography: Montserrat (headings), Space Grotesk (body), Space Mono (labels/buttons)
+- All components have zero `borderRadius` (sharp brutalist edges)
+- Component defaults: thick borders, hard drop-shadows on buttons/cards/modals
 
 ### 12.8 Production Build (Docker)
 
@@ -903,7 +909,7 @@ The `Dockerfile` builds the React app via multi-stage:
 | Service | Image | Container Name | Port Mapping | Depends On |
 |---------|-------|---------------|-------------|------------|
 | `postgres` | `postgres:16-alpine` | `taskmanager-db` | `5432:5432` | — |
-| `api` | Custom (Dockerfile) | `taskmanager-api` | `5000:8080` | postgres (healthy) |
+| `api` | Custom (Dockerfile) | `taskmanager-api` | `8080:8080` | postgres (healthy) |
 | `frontend` | Custom (Dockerfile) | `taskmanager-web` | `3000:80` | api |
 
 ### 13.2 Dockerfiles
@@ -1141,11 +1147,6 @@ CREATE TABLE "AspNetUsers" (
 **Response (200):** `{ success: true, data: null, errors: [] }`
 **Response (404):** `{ success: false, data: null, errors: ["Task not found"] }`
 
-#### `PATCH /api/tasks/{id}/complete`
-
-**Response (200):** `{ success: true, data: null, errors: [] }`
-**Response (400):** `{ success: false, data: null, errors: ["Task is already completed"] }`
-
 #### `GET /api/tasks/statuses`
 
 **Response (200):**
@@ -1174,7 +1175,6 @@ CREATE TABLE "AspNetUsers" (
 - I can create a task with a title, description, due date, and initial status (Todo).
 - I can see only my own tasks on the dashboard and task list.
 - I can update a task's title, description, due date, or status.
-- I can mark a task as complete.
 - I can delete a task permanently.
 - I can filter or view tasks by status (Todo, In Progress, Done).
 - Tasks have three statuses: Todo, In Progress, and Done.

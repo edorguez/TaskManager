@@ -48,10 +48,13 @@ app.MapTaskEndpoints();
 
 app.MapGet("/api/health", () => Results.Ok(new { status = "healthy" }));
 
-using (var scope = app.Services.CreateScope())
+if (!app.Environment.IsEnvironment("Testing"))
 {
-    var db = scope.ServiceProvider.GetRequiredService<TaskManager.Infrastructure.Data.ApplicationDbContext>();
-    db.Database.Migrate();
+    using (var scope = app.Services.CreateScope())
+    {
+        var db = scope.ServiceProvider.GetRequiredService<TaskManager.Infrastructure.Data.ApplicationDbContext>();
+        db.Database.Migrate();
+    }
 }
 
 app.Run();

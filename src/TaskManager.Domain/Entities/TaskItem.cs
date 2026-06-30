@@ -57,17 +57,6 @@ public class TaskItem : AggregateRoot
         return Result.Ok();
     }
 
-    public Result Complete()
-    {
-        if (StatusId == 3)
-            return Result.Fail("Task is already completed.");
-
-        StatusId = 3;
-        UpdatedAt = DateTime.UtcNow;
-        RaiseDomainEvent(new TaskCompletedDomainEvent(Id, CreatedByUserId));
-        return Result.Ok();
-    }
-
     public Result ChangeStatus(int newStatusId)
     {
         if (newStatusId < 1 || newStatusId > 3)

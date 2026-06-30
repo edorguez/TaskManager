@@ -1,6 +1,68 @@
-@TaskManager.API_HostAddress = http://localhost:5143
+@baseUrl = http://localhost:8080
+@token = YOUR_JWT_TOKEN_HERE
 
-GET {{TaskManager.API_HostAddress}}/weatherforecast/
-Accept: application/json
+### Health
+GET {{baseUrl}}/api/health
 
-###
+### Register
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "Test123!",
+  "confirmPassword": "Test123!"
+}
+
+### Login
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "Test123!"
+}
+
+### Get Current User
+GET {{baseUrl}}/api/auth/me
+Authorization: Bearer {{token}}
+
+### Get All Tasks
+GET {{baseUrl}}/api/tasks
+Authorization: Bearer {{token}}
+
+### Get Task Statuses
+GET {{baseUrl}}/api/tasks/statuses
+Authorization: Bearer {{token}}
+
+### Create Task
+POST {{baseUrl}}/api/tasks
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "title": "My new task",
+  "description": "Task description",
+  "dueDate": "2026-12-31T00:00:00Z",
+  "statusId": 1
+}
+
+### Get Task By ID
+GET {{baseUrl}}/api/tasks/{{taskId}}
+Authorization: Bearer {{token}}
+
+### Update Task
+PUT {{baseUrl}}/api/tasks/{{taskId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "title": "Updated title",
+  "description": "Updated description",
+  "dueDate": "2026-12-31T00:00:00Z",
+  "statusId": 2
+}
+
+### Delete Task
+DELETE {{baseUrl}}/api/tasks/{{taskId}}
+Authorization: Bearer {{token}}
